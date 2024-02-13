@@ -13,12 +13,12 @@ use core::fmt;
 #[cfg(feature = "std")]
 use std::error;
 
-use bitcoin::hashes::{hash160, sha256d, Hash};
-use bitcoin::psbt::{self, Psbt};
-use bitcoin::secp256k1::{self, Secp256k1, VerifyOnly};
-use bitcoin::sighash::{self, SighashCache};
-use bitcoin::taproot::{self, ControlBlock, LeafVersion, TapLeafHash};
-use bitcoin::{absolute, bip32, Script, ScriptBuf, Sequence};
+use peercoin::hashes::{hash160, sha256d, Hash};
+use peercoin::psbt::{self, Psbt};
+use peercoin::secp256k1::{self, Secp256k1, VerifyOnly};
+use peercoin::sighash::{self, SighashCache};
+use peercoin::taproot::{self, ControlBlock, LeafVersion, TapLeafHash};
+use peercoin::{absolute, bip32, Script, ScriptBuf, Sequence};
 
 use crate::miniscript::context::SigType;
 use crate::prelude::*;
@@ -87,9 +87,9 @@ impl error::Error for Error {
 #[derive(Debug)]
 pub enum InputError {
     /// Get the secp Errors directly
-    SecpErr(bitcoin::secp256k1::Error),
+    SecpErr(peercoin::secp256k1::Error),
     /// Key errors
-    KeyErr(bitcoin::key::Error),
+    KeyErr(peercoin::key::Error),
     /// Could not satisfy taproot descriptor
     /// This error is returned when both script path and key paths could not be
     /// satisfied. We cannot return a detailed error because we try all miniscripts
@@ -114,7 +114,7 @@ pub enum InputError {
     /// Invalid sig
     InvalidSignature {
         /// The bitcoin public key
-        pubkey: bitcoin::PublicKey,
+        pubkey: peercoin::PublicKey,
         /// The (incorrect) signature
         sig: Vec<u8>,
     },
@@ -143,7 +143,7 @@ pub enum InputError {
         /// the sighash type we got
         got: sighash::EcdsaSighashType,
         /// the corresponding publickey
-        pubkey: bitcoin::PublicKey,
+        pubkey: peercoin::PublicKey,
     },
 }
 
@@ -239,15 +239,15 @@ impl From<super::Error> for InputError {
 }
 
 #[doc(hidden)]
-impl From<bitcoin::secp256k1::Error> for InputError {
-    fn from(e: bitcoin::secp256k1::Error) -> InputError {
+impl From<peercoin::secp256k1::Error> for InputError {
+    fn from(e: peercoin::secp256k1::Error) -> InputError {
         InputError::SecpErr(e)
     }
 }
 
 #[doc(hidden)]
-impl From<bitcoin::key::Error> for InputError {
-    fn from(e: bitcoin::key::Error) -> InputError {
+impl From<peercoin::key::Error> for InputError {
+    fn from(e: peercoin::key::Error) -> InputError {
         InputError::KeyErr(e)
     }
 }
@@ -273,7 +273,7 @@ impl<'psbt> PsbtInputSatisfier<'psbt> {
 }
 
 impl<'psbt, Pk: MiniscriptKey + ToPublicKey> Satisfier<Pk> for PsbtInputSatisfier<'psbt> {
-    fn lookup_tap_key_spend_sig(&self) -> Option<bitcoin::taproot::Signature> {
+    fn lookup_tap_key_spend_sig(&self) -> Option<peercoin::taproot::Signature> {
         self.psbt.inputs[self.index].tap_key_sig
     }
 
@@ -281,24 +281,24 @@ impl<'psbt, Pk: MiniscriptKey + ToPublicKey> Satisfier<Pk> for PsbtInputSatisfie
         &self,
         pk: &Pk,
         lh: &TapLeafHash,
-    ) -> Option<bitcoin::taproot::Signature> {
+    ) -> Option<peercoin::taproot::Signature> {
         self.psbt.inputs[self.index]
             .tap_script_sigs
             .get(&(pk.to_x_only_pubkey(), *lh))
             .copied()
     }
 
-    fn lookup_raw_pkh_pk(&self, pkh: &hash160::Hash) -> Option<bitcoin::PublicKey> {
+    fn lookup_raw_pkh_pk(&self, pkh: &hash160::Hash) -> Option<peercoin::PublicKey> {
         self.psbt.inputs[self.index]
             .bip32_derivation
             .iter()
             .find(|&(pubkey, _)| pubkey.to_pubkeyhash(SigType::Ecdsa) == *pkh)
-            .map(|(pubkey, _)| bitcoin::PublicKey::new(*pubkey))
+            .map(|(pubkey, _)| peercoin::PublicKey::new(*pubkey))
     }
 
     fn lookup_tap_control_block_map(
         &self,
-    ) -> Option<&BTreeMap<ControlBlock, (bitcoin::ScriptBuf, LeafVersion)>> {
+    ) -> Option<&BTreeMap<ControlBlock, (peercoin::ScriptBuf, LeafVersion)>> {
         Some(&self.psbt.inputs[self.index].tap_scripts)
     }
 
@@ -306,8 +306,8 @@ impl<'psbt, Pk: MiniscriptKey + ToPublicKey> Satisfier<Pk> for PsbtInputSatisfie
         &self,
         pkh: &(hash160::Hash, TapLeafHash),
     ) -> Option<(
-        bitcoin::secp256k1::XOnlyPublicKey,
-        bitcoin::taproot::Signature,
+        peercoin::secp256k1::XOnlyPublicKey,
+        peercoin::taproot::Signature,
     )> {
         self.psbt.inputs[self.index]
             .tap_script_sigs
@@ -318,7 +318,7 @@ impl<'psbt, Pk: MiniscriptKey + ToPublicKey> Satisfier<Pk> for PsbtInputSatisfie
             .map(|((x_only_pk, _leaf_hash), sig)| (*x_only_pk, *sig))
     }
 
-    fn lookup_ecdsa_sig(&self, pk: &Pk) -> Option<bitcoin::ecdsa::Signature> {
+    fn lookup_ecdsa_sig(&self, pk: &Pk) -> Option<peercoin::ecdsa::Signature> {
         self.psbt.inputs[self.index]
             .partial_sigs
             .get(&pk.to_public_key())
@@ -328,7 +328,7 @@ impl<'psbt, Pk: MiniscriptKey + ToPublicKey> Satisfier<Pk> for PsbtInputSatisfie
     fn lookup_raw_pkh_ecdsa_sig(
         &self,
         pkh: &hash160::Hash,
-    ) -> Option<(bitcoin::PublicKey, bitcoin::ecdsa::Signature)> {
+    ) -> Option<(peercoin::PublicKey, peercoin::ecdsa::Signature)> {
         self.psbt.inputs[self.index]
             .partial_sigs
             .iter()
@@ -540,14 +540,14 @@ pub trait PsbtExt {
     ) -> Result<Psbt, (Psbt, Error)>;
 
     /// Psbt extractor as defined in BIP174 that takes in a psbt reference
-    /// and outputs a extracted bitcoin::Transaction
+    /// and outputs a extracted peercoin::Transaction
     /// Also does the interpreter sanity check
     /// Will error if the final ScriptSig or final Witness are missing
     /// or the interpreter check fails.
     fn extract<C: secp256k1::Verification>(
         &self,
         secp: &Secp256k1<C>,
-    ) -> Result<bitcoin::Transaction, Error>;
+    ) -> Result<peercoin::Transaction, Error>;
 
     /// Update PSBT input with a descriptor and check consistency of `*_utxo` fields.
     ///
@@ -592,8 +592,8 @@ pub trait PsbtExt {
     ///
     /// Based on the sighash
     /// flag specified in the [`Psbt`] sighash field. If the input sighash flag psbt field is `None`
-    /// the [`sighash::TapSighashType::Default`](bitcoin::sighash::TapSighashType::Default) is chosen
-    /// for for taproot spends, otherwise [`EcdsaSighashType::All`](bitcoin::sighash::EcdsaSighashType::All) is chosen.
+    /// the [`sighash::TapSighashType::Default`](peercoin::sighash::TapSighashType::Default) is chosen
+    /// for for taproot spends, otherwise [`EcdsaSighashType::All`](peercoin::sighash::EcdsaSighashType::All) is chosen.
     /// If the utxo at `idx` is a taproot output, returns a [`PsbtSighashMsg::TapSighash`] variant.
     /// If the utxo at `idx` is a pre-taproot segwit output, returns a [`PsbtSighashMsg::SegwitV0Sighash`] variant.
     /// For legacy outputs, returns a [`PsbtSighashMsg::LegacySighash`] variant.
@@ -608,8 +608,8 @@ pub trait PsbtExt {
     /// * `cache`: The [`SighashCache`] for used to cache/read previously cached computations
     /// * `tapleaf_hash`: If the output is taproot, compute the sighash for this particular leaf.
     ///
-    /// [`SighashCache`]: bitcoin::sighash::SighashCache
-    fn sighash_msg<T: Borrow<bitcoin::Transaction>>(
+    /// [`SighashCache`]: peercoin::sighash::SighashCache
+    fn sighash_msg<T: Borrow<peercoin::Transaction>>(
         &self,
         idx: usize,
         cache: &mut SighashCache<T>,
@@ -732,7 +732,7 @@ impl PsbtExt for Psbt {
     fn extract<C: secp256k1::Verification>(
         &self,
         secp: &Secp256k1<C>,
-    ) -> Result<bitcoin::Transaction, Error> {
+    ) -> Result<peercoin::Transaction, Error> {
         sanity_check(self)?;
 
         let mut ret = self.unsigned_tx.clone();
@@ -845,7 +845,7 @@ impl PsbtExt for Psbt {
         Ok(())
     }
 
-    fn sighash_msg<T: Borrow<bitcoin::Transaction>>(
+    fn sighash_msg<T: Borrow<peercoin::Transaction>>(
         &self,
         idx: usize,
         cache: &mut SighashCache<T>,
@@ -859,7 +859,7 @@ impl PsbtExt for Psbt {
         let prevouts = finalizer::prevouts(self).map_err(|_e| SighashError::MissingSpendUtxos)?;
         // Note that as per Psbt spec we should have access to spent_utxos for the transaction
         // Even if the transaction does not require SighashAll, we create `Prevouts::All` for code simplicity
-        let prevouts = bitcoin::sighash::Prevouts::All(&prevouts);
+        let prevouts = peercoin::sighash::Prevouts::All(&prevouts);
         let inp_spk =
             finalizer::get_scriptpubkey(self, idx).map_err(|_e| SighashError::MissingInputUtxo)?;
         if inp_spk.is_v1_p2tr() {
@@ -961,14 +961,14 @@ pub trait PsbtInputExt {
     fn update_with_descriptor_unchecked(
         &mut self,
         descriptor: &Descriptor<DefiniteDescriptorKey>,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, descriptor::ConversionError>;
+    ) -> Result<Descriptor<peercoin::PublicKey>, descriptor::ConversionError>;
 }
 
 impl PsbtInputExt for psbt::Input {
     fn update_with_descriptor_unchecked(
         &mut self,
         descriptor: &Descriptor<DefiniteDescriptorKey>,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, descriptor::ConversionError> {
+    ) -> Result<Descriptor<peercoin::PublicKey>, descriptor::ConversionError> {
         let (derived, _) = update_item_with_descriptor_helper(self, descriptor, None)?;
         Ok(derived)
     }
@@ -995,14 +995,14 @@ pub trait PsbtOutputExt {
     fn update_with_descriptor_unchecked(
         &mut self,
         descriptor: &Descriptor<DefiniteDescriptorKey>,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, descriptor::ConversionError>;
+    ) -> Result<Descriptor<peercoin::PublicKey>, descriptor::ConversionError>;
 }
 
 impl PsbtOutputExt for psbt::Output {
     fn update_with_descriptor_unchecked(
         &mut self,
         descriptor: &Descriptor<DefiniteDescriptorKey>,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, descriptor::ConversionError> {
+    ) -> Result<Descriptor<peercoin::PublicKey>, descriptor::ConversionError> {
         let (derived, _) = update_item_with_descriptor_helper(self, descriptor, None)?;
         Ok(derived)
     }
@@ -1015,13 +1015,13 @@ struct KeySourceLookUp(
     pub secp256k1::Secp256k1<VerifyOnly>,
 );
 
-impl Translator<DefiniteDescriptorKey, bitcoin::PublicKey, descriptor::ConversionError>
+impl Translator<DefiniteDescriptorKey, peercoin::PublicKey, descriptor::ConversionError>
     for KeySourceLookUp
 {
     fn pk(
         &mut self,
         xpk: &DefiniteDescriptorKey,
-    ) -> Result<bitcoin::PublicKey, descriptor::ConversionError> {
+    ) -> Result<peercoin::PublicKey, descriptor::ConversionError> {
         let derived = xpk.derive_public_key(&self.1)?;
         self.0.insert(
             derived.to_public_key().inner,
@@ -1036,7 +1036,7 @@ impl Translator<DefiniteDescriptorKey, bitcoin::PublicKey, descriptor::Conversio
 
     translate_hash_clone!(
         DescriptorPublicKey,
-        bitcoin::PublicKey,
+        peercoin::PublicKey,
         descriptor::ConversionError
     );
 }
@@ -1047,10 +1047,10 @@ trait PsbtFields {
     fn redeem_script(&mut self) -> &mut Option<ScriptBuf>;
     fn witness_script(&mut self) -> &mut Option<ScriptBuf>;
     fn bip32_derivation(&mut self) -> &mut BTreeMap<secp256k1::PublicKey, bip32::KeySource>;
-    fn tap_internal_key(&mut self) -> &mut Option<bitcoin::key::XOnlyPublicKey>;
+    fn tap_internal_key(&mut self) -> &mut Option<peercoin::key::XOnlyPublicKey>;
     fn tap_key_origins(
         &mut self,
-    ) -> &mut BTreeMap<bitcoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)>;
+    ) -> &mut BTreeMap<peercoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)>;
     fn proprietary(&mut self) -> &mut BTreeMap<psbt::raw::ProprietaryKey, Vec<u8>>;
     fn unknown(&mut self) -> &mut BTreeMap<psbt::raw::Key, Vec<u8>>;
 
@@ -1078,12 +1078,12 @@ impl PsbtFields for psbt::Input {
     fn bip32_derivation(&mut self) -> &mut BTreeMap<secp256k1::PublicKey, bip32::KeySource> {
         &mut self.bip32_derivation
     }
-    fn tap_internal_key(&mut self) -> &mut Option<bitcoin::key::XOnlyPublicKey> {
+    fn tap_internal_key(&mut self) -> &mut Option<peercoin::key::XOnlyPublicKey> {
         &mut self.tap_internal_key
     }
     fn tap_key_origins(
         &mut self,
-    ) -> &mut BTreeMap<bitcoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)> {
+    ) -> &mut BTreeMap<peercoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)> {
         &mut self.tap_key_origins
     }
     fn proprietary(&mut self) -> &mut BTreeMap<psbt::raw::ProprietaryKey, Vec<u8>> {
@@ -1111,12 +1111,12 @@ impl PsbtFields for psbt::Output {
     fn bip32_derivation(&mut self) -> &mut BTreeMap<secp256k1::PublicKey, bip32::KeySource> {
         &mut self.bip32_derivation
     }
-    fn tap_internal_key(&mut self) -> &mut Option<bitcoin::key::XOnlyPublicKey> {
+    fn tap_internal_key(&mut self) -> &mut Option<peercoin::key::XOnlyPublicKey> {
         &mut self.tap_internal_key
     }
     fn tap_key_origins(
         &mut self,
-    ) -> &mut BTreeMap<bitcoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)> {
+    ) -> &mut BTreeMap<peercoin::key::XOnlyPublicKey, (Vec<TapLeafHash>, bip32::KeySource)> {
         &mut self.tap_key_origins
     }
     fn proprietary(&mut self) -> &mut BTreeMap<psbt::raw::ProprietaryKey, Vec<u8>> {
@@ -1138,7 +1138,7 @@ fn update_item_with_descriptor_helper<F: PsbtFields>(
     // the return value is a tuple here since the two internal calls to it require different info.
     // One needs the derived descriptor and the other needs to know whether the script_pubkey check
     // failed.
-) -> Result<(Descriptor<bitcoin::PublicKey>, bool), descriptor::ConversionError> {
+) -> Result<(Descriptor<peercoin::PublicKey>, bool), descriptor::ConversionError> {
     let secp = secp256k1::Secp256k1::verification_only();
 
     let derived = if let Descriptor::Tr(_) = &descriptor {
@@ -1620,7 +1620,7 @@ mod tests {
             let desc = format!("wsh(multi(2,{}/0/0,{}/0/1,{}/1/0))", xpub, xpub, xpub);
             let desc = Descriptor::from_str(&desc).unwrap();
             let derived = format!("wsh(multi(2,{}))", pubkeys.join(","));
-            let derived = Descriptor::<bitcoin::PublicKey>::from_str(&derived).unwrap();
+            let derived = Descriptor::<peercoin::PublicKey>::from_str(&derived).unwrap();
 
             let mut psbt_input = psbt::Input::default();
             psbt_input.update_with_descriptor_unchecked(&desc).unwrap();
@@ -1643,7 +1643,7 @@ mod tests {
             let desc = format!("sh(multi(2,{}/0/0,{}/0/1,{}/1/0))", xpub, xpub, xpub);
             let desc = Descriptor::from_str(&desc).unwrap();
             let derived = format!("sh(multi(2,{}))", pubkeys.join(","));
-            let derived = Descriptor::<bitcoin::PublicKey>::from_str(&derived).unwrap();
+            let derived = Descriptor::<peercoin::PublicKey>::from_str(&derived).unwrap();
 
             let mut psbt_input = psbt::Input::default();
             psbt_input.update_with_descriptor_unchecked(&desc).unwrap();
@@ -1669,8 +1669,9 @@ mod tests {
         let desc = "tr([73c5da0a/86'/0'/0']xpub6BgBgsespWvERF3LHQu6CnqdvfEvtMcQjYrcRzx53QJjSxarj2afYWcLteoGVky7D3UKDP9QyrLprQ3VCECoY49yfdDEHGCtMMj92pReUsQ/0/0)";
         let desc = Descriptor::<DefiniteDescriptorKey>::from_str(&desc).unwrap();
 
-        let mut non_witness_utxo = bitcoin::Transaction {
+        let mut non_witness_utxo = peercoin::Transaction {
             version: 1,
+            timestamp: 0,
             lock_time: absolute::LockTime::ZERO,
             input: vec![],
             output: vec![TxOut {
@@ -1682,8 +1683,9 @@ mod tests {
             }],
         };
 
-        let tx = bitcoin::Transaction {
+        let tx = peercoin::Transaction {
             version: 1,
+            timestamp: 0,
             lock_time: absolute::LockTime::ZERO,
             input: vec![TxIn {
                 previous_output: OutPoint {
@@ -1734,8 +1736,9 @@ mod tests {
         let desc = "tr([73c5da0a/86'/0'/0']xpub6BgBgsespWvERF3LHQu6CnqdvfEvtMcQjYrcRzx53QJjSxarj2afYWcLteoGVky7D3UKDP9QyrLprQ3VCECoY49yfdDEHGCtMMj92pReUsQ/0/0)";
         let desc = Descriptor::<DefiniteDescriptorKey>::from_str(&desc).unwrap();
 
-        let tx = bitcoin::Transaction {
+        let tx = peercoin::Transaction {
             version: 1,
+            timestamp: 0,
             lock_time: absolute::LockTime::ZERO,
             input: vec![],
             output: vec![TxOut {

@@ -3,9 +3,9 @@
 
 //! Interpreter stack
 
-use bitcoin::blockdata::{opcodes, script};
-use bitcoin::hashes::{hash160, ripemd160, sha256, Hash};
-use bitcoin::{absolute, Sequence};
+use peercoin::blockdata::{opcodes, script};
+use peercoin::hashes::{hash160, ripemd160, sha256, Hash};
+use peercoin::{absolute, Sequence};
 
 use super::error::PkEvalErrInner;
 use super::{verify_sersig, BitcoinKey, Error, HashLockType, KeySigPair, SatisfiedConstraint};
@@ -52,7 +52,7 @@ impl<'txin> Element<'txin> {
     ///
     /// Supports `OP_1` but no other numbers since these are not used by Miniscript
     pub fn from_instruction(
-        ins: Result<script::Instruction<'txin>, bitcoin::blockdata::script::Error>,
+        ins: Result<script::Instruction<'txin>, peercoin::blockdata::script::Error>,
     ) -> Result<Self, Error> {
         match ins {
             //Also covers the dissatisfied case as PushBytes0
@@ -168,8 +168,8 @@ impl<'txin> Stack<'txin> {
         // We don't really store information about which key error.
         fn bitcoin_key_from_slice(sl: &[u8], sig_type: SigType) -> Option<BitcoinKey> {
             let key: BitcoinKey = match sig_type {
-                SigType::Schnorr => bitcoin::key::XOnlyPublicKey::from_slice(sl).ok()?.into(),
-                SigType::Ecdsa => bitcoin::PublicKey::from_slice(sl).ok()?.into(),
+                SigType::Schnorr => peercoin::key::XOnlyPublicKey::from_slice(sl).ok()?.into(),
+                SigType::Ecdsa => peercoin::PublicKey::from_slice(sl).ok()?.into(),
             };
             Some(key)
         }

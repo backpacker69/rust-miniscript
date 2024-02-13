@@ -11,8 +11,8 @@
 use core::fmt;
 use core::str::FromStr;
 
-use bitcoin::hashes::{hash160, Hash};
-use bitcoin::{absolute, opcodes, script, Sequence};
+use peercoin::hashes::{hash160, Hash};
+use peercoin::{absolute, opcodes, script, Sequence};
 use sync::Arc;
 
 use crate::miniscript::context::SigType;

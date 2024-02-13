@@ -20,8 +20,8 @@
 use std::str::FromStr;
 
 use actual_rand as rand;
-use bitcoin::hashes::{hash160, ripemd160, sha256, Hash};
-use bitcoin::secp256k1;
+use peercoin::hashes::{hash160, ripemd160, sha256, Hash};
+use peercoin::secp256k1;
 use internals::hex::exts::DisplayHex;
 use miniscript::descriptor::{SinglePub, SinglePubKey};
 use miniscript::{
@@ -33,7 +33,7 @@ use secp256k1::XOnlyPublicKey;
 
 #[derive(Clone, Debug)]
 pub struct PubData {
-    pub pks: Vec<bitcoin::PublicKey>,
+    pub pks: Vec<peercoin::PublicKey>,
     pub x_only_pks: Vec<XOnlyPublicKey>,
     pub sha256: sha256::Hash,
     pub hash256: hash256::Hash,
@@ -43,8 +43,8 @@ pub struct PubData {
 
 #[derive(Debug, Clone)]
 pub struct SecretData {
-    pub sks: Vec<bitcoin::secp256k1::SecretKey>,
-    pub x_only_keypairs: Vec<bitcoin::secp256k1::KeyPair>,
+    pub sks: Vec<peercoin::secp256k1::SecretKey>,
+    pub x_only_keypairs: Vec<peercoin::secp256k1::KeyPair>,
     pub sha256_pre: [u8; 32],
     pub hash256_pre: [u8; 32],
     pub ripemd160_pre: [u8; 32],
@@ -60,9 +60,9 @@ pub struct TestData {
 fn setup_keys(
     n: usize,
 ) -> (
-    Vec<bitcoin::secp256k1::SecretKey>,
-    Vec<miniscript::bitcoin::PublicKey>,
-    Vec<bitcoin::secp256k1::KeyPair>,
+    Vec<peercoin::secp256k1::SecretKey>,
+    Vec<miniscript::peercoin::PublicKey>,
+    Vec<peercoin::secp256k1::KeyPair>,
     Vec<XOnlyPublicKey>,
 ) {
     let secp_sign = secp256k1::Secp256k1::signing_only();
@@ -75,7 +75,7 @@ fn setup_keys(
         sk[2] = (i >> 16) as u8;
 
         let sk = secp256k1::SecretKey::from_slice(&sk[..]).expect("secret key");
-        let pk = miniscript::bitcoin::PublicKey {
+        let pk = miniscript::peercoin::PublicKey {
             inner: secp256k1::PublicKey::from_secret_key(&secp_sign, &sk),
             compressed: true,
         };
@@ -87,7 +87,7 @@ fn setup_keys(
     let mut x_only_pks = vec![];
 
     for i in 0..n {
-        let keypair = bitcoin::secp256k1::KeyPair::from_secret_key(&secp_sign, &sks[i]);
+        let keypair = peercoin::secp256k1::KeyPair::from_secret_key(&secp_sign, &sks[i]);
         let (xpk, _parity) = XOnlyPublicKey::from_keypair(&keypair);
         x_only_keypairs.push(keypair);
         x_only_pks.push(xpk);
@@ -132,7 +132,7 @@ impl TestData {
 }
 
 /// Obtain an insecure random public key with unknown secret key for testing
-pub fn random_pk(mut seed: u8) -> bitcoin::PublicKey {
+pub fn random_pk(mut seed: u8) -> peercoin::PublicKey {
     loop {
         let mut data = [0; 33];
         for byte in &mut data[..] {
@@ -141,7 +141,7 @@ pub fn random_pk(mut seed: u8) -> bitcoin::PublicKey {
             seed = seed.wrapping_mul(41).wrapping_add(53);
         }
         data[0] = 2 + (data[0] >> 7);
-        if let Ok(key) = bitcoin::PublicKey::from_slice(&data[..33]) {
+        if let Ok(key) = peercoin::PublicKey::from_slice(&data[..33]) {
             return key;
         }
     }

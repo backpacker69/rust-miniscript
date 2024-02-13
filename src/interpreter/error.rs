@@ -5,8 +5,8 @@ use core::fmt;
 #[cfg(feature = "std")]
 use std::error;
 
-use bitcoin::hashes::hash160;
-use bitcoin::{secp256k1, taproot};
+use peercoin::hashes::hash160;
+use peercoin::{secp256k1, taproot};
 use internals::hex::display::DisplayHex;
 
 use super::BitcoinKey;
@@ -31,7 +31,7 @@ pub enum Error {
     /// General Interpreter error.
     CouldNotEvaluate,
     /// ECDSA Signature related error
-    EcdsaSig(bitcoin::ecdsa::Error),
+    EcdsaSig(peercoin::ecdsa::Error),
     /// We expected a push (including a `OP_1` but no other numeric pushes)
     ExpectedPush,
     /// The preimage to the hash function must be exactly 32 bytes.
@@ -49,9 +49,9 @@ pub enum Error {
     /// Invalid Sighash type
     InvalidSchnorrSighashType(Vec<u8>),
     /// ecdsa Signature failed to verify
-    InvalidEcdsaSignature(bitcoin::PublicKey),
+    InvalidEcdsaSignature(peercoin::PublicKey),
     /// Signature failed to verify
-    InvalidSchnorrSignature(bitcoin::key::XOnlyPublicKey),
+    InvalidSchnorrSignature(peercoin::key::XOnlyPublicKey),
     /// Last byte of this signature isn't a standard sighash type
     NonStandardSighash(Vec<u8>),
     /// Miniscript error
@@ -89,9 +89,9 @@ pub enum Error {
     /// Miniscript requires the entire top level script to be satisfied.
     ScriptSatisfactionError,
     /// Schnorr Signature error
-    SchnorrSig(bitcoin::taproot::Error),
+    SchnorrSig(peercoin::taproot::Error),
     /// Errors in signature hash calculations
-    SighashError(bitcoin::sighash::Error),
+    SighashError(peercoin::sighash::Error),
     /// Taproot Annex Unsupported
     TapAnnexUnsupported,
     /// An uncompressed public key was encountered in a context where it is
@@ -242,22 +242,22 @@ impl From<secp256k1::Error> for Error {
 }
 
 #[doc(hidden)]
-impl From<bitcoin::sighash::Error> for Error {
-    fn from(e: bitcoin::sighash::Error) -> Error {
+impl From<peercoin::sighash::Error> for Error {
+    fn from(e: peercoin::sighash::Error) -> Error {
         Error::SighashError(e)
     }
 }
 
 #[doc(hidden)]
-impl From<bitcoin::ecdsa::Error> for Error {
-    fn from(e: bitcoin::ecdsa::Error) -> Error {
+impl From<peercoin::ecdsa::Error> for Error {
+    fn from(e: peercoin::ecdsa::Error) -> Error {
         Error::EcdsaSig(e)
     }
 }
 
 #[doc(hidden)]
-impl From<bitcoin::taproot::Error> for Error {
-    fn from(e: bitcoin::taproot::Error) -> Error {
+impl From<peercoin::taproot::Error> for Error {
+    fn from(e: peercoin::taproot::Error) -> Error {
         Error::SchnorrSig(e)
     }
 }
@@ -274,9 +274,9 @@ impl From<crate::Error> for Error {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PkEvalErrInner {
     /// Full Key
-    FullKey(bitcoin::PublicKey),
+    FullKey(peercoin::PublicKey),
     /// XOnly Key
-    XOnlyKey(bitcoin::key::XOnlyPublicKey),
+    XOnlyKey(peercoin::key::XOnlyPublicKey),
 }
 
 impl From<BitcoinKey> for PkEvalErrInner {

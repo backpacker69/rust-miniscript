@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use bitcoin::address::WitnessVersion;
-use bitcoin::key::XOnlyPublicKey;
-use bitcoin::secp256k1::{rand, KeyPair};
-use bitcoin::Network;
+use peercoin::address::WitnessVersion;
+use peercoin::key::XOnlyPublicKey;
+use peercoin::secp256k1::{rand, KeyPair};
+use peercoin::Network;
 use miniscript::descriptor::DescriptorType;
 use miniscript::policy::Concrete;
 use miniscript::{translate_hash_fail, Descriptor, Miniscript, Tap, TranslatePk, Translator};
@@ -108,9 +108,9 @@ fn main() {
     assert_eq!(max_sat_wt, 269);
 
     // Compute the bitcoin address and check if it matches
-    let network = Network::Bitcoin;
+    let network = Network::Peercoin;
     let addr = real_desc.address(network).unwrap();
-    let expected_addr = bitcoin::Address::from_str(
+    let expected_addr = peercoin::Address::from_str(
         "bc1pcc8ku64slu3wu04a6g376d2s8ck9y5alw5sus4zddvn8xgpdqw2swrghwx",
     )
     .unwrap()

@@ -8,16 +8,16 @@ use std::collections::BTreeMap;
 use std::{error, fmt};
 
 use actual_rand as rand;
-use bitcoin::blockdata::witness::Witness;
-use bitcoin::hashes::{sha256d, Hash};
-use bitcoin::psbt::Psbt;
-use bitcoin::sighash::SighashCache;
-use bitcoin::taproot::{LeafVersion, TapLeafHash};
-use bitcoin::{
+use peercoin::blockdata::witness::Witness;
+use peercoin::hashes::{sha256d, Hash};
+use peercoin::psbt::Psbt;
+use peercoin::sighash::SighashCache;
+use peercoin::taproot::{LeafVersion, TapLeafHash};
+use peercoin::{
     absolute, psbt, secp256k1, sighash, Amount, OutPoint, Sequence, Transaction, TxIn, TxOut, Txid,
 };
-use bitcoind::bitcoincore_rpc::{json, Client, RpcApi};
-use miniscript::bitcoin::{self, ecdsa, taproot, ScriptBuf};
+use peercoind::bitcoincore_rpc::{json, Client, RpcApi};
+use miniscript::peercoin::{self, ecdsa, taproot, ScriptBuf};
 use miniscript::psbt::{PsbtExt, PsbtInputExt};
 use miniscript::{Descriptor, Miniscript, ScriptContext, ToPublicKey};
 mod setup;
@@ -88,7 +88,7 @@ pub fn test_desc_satisfy(
         .unwrap();
 
     let derived_desc = definite_desc.derived_descriptor(&secp).unwrap();
-    let desc_address = derived_desc.address(bitcoin::Network::Regtest);
+    let desc_address = derived_desc.address(peercoin::Network::Regtest);
     let desc_address = desc_address.map_err(|_x| DescError::AddressComputationError)?;
 
     // Next send some btc to each address corresponding to the miniscript
@@ -319,7 +319,7 @@ pub fn test_desc_satisfy(
 
 // Find all secret corresponding to the known public keys in ms
 fn find_sks_ms<Ctx: ScriptContext>(
-    ms: &Miniscript<bitcoin::PublicKey, Ctx>,
+    ms: &Miniscript<peercoin::PublicKey, Ctx>,
     testdata: &TestData,
 ) -> Vec<secp256k1::SecretKey> {
     let sks = &testdata.secretdata.sks;
@@ -334,7 +334,7 @@ fn find_sks_ms<Ctx: ScriptContext>(
     sks
 }
 
-fn find_sk_single_key(pk: bitcoin::PublicKey, testdata: &TestData) -> Vec<secp256k1::SecretKey> {
+fn find_sk_single_key(pk: peercoin::PublicKey, testdata: &TestData) -> Vec<secp256k1::SecretKey> {
     let sks = &testdata.secretdata.sks;
     let pks = &testdata.pubdata.pks;
     let i = pks.iter().position(|&x| x.to_public_key() == pk);

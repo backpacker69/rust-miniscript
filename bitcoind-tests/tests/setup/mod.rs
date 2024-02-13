@@ -1,7 +1,7 @@
 extern crate miniscript;
 
-use bitcoind::bitcoincore_rpc::RpcApi;
-use bitcoind::BitcoinD;
+use peercoind::bitcoincore_rpc::RpcApi;
+use peercoind::BitcoinD;
 use miniscript::bitcoin;
 
 pub mod test_util;
@@ -35,7 +35,7 @@ pub fn setup() -> BitcoinD {
 
     assert_eq!(
         cl.get_balance(Some(1) /*min conf*/, None).unwrap(),
-        bitcoin::Amount::from_sat(100_000_000 * 50)
+        peercoin::Amount::from_sat(100_000_000 * 50)
     );
     bitcoind
 }

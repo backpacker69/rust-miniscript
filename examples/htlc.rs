@@ -16,13 +16,13 @@
 
 use std::str::FromStr;
 
-use bitcoin::Network;
+use peercoin::Network;
 use miniscript::descriptor::Wsh;
 use miniscript::policy::{Concrete, Liftable};
 
 fn main() {
     // HTLC policy with 10:1 odds for happy (co-operative) case compared to uncooperative case.
-    let htlc_policy = Concrete::<bitcoin::PublicKey>::from_str(&format!("or(10@and(sha256({secret_hash}),pk({redeem_identity})),1@and(older({expiry}),pk({refund_identity})))",
+    let htlc_policy = Concrete::<peercoin::PublicKey>::from_str(&format!("or(10@and(sha256({secret_hash}),pk({redeem_identity})),1@and(older({expiry}),pk({refund_identity})))",
                                                   secret_hash = "1111111111111111111111111111111111111111111111111111111111111111",
                                                   redeem_identity = "022222222222222222222222222222222222222222222222222222222222222222",
                                                   refund_identity = "020202020202020202020202020202020202020202020202020202020202020202",
@@ -65,7 +65,7 @@ fn main() {
 
     // Get the address for this Wsh descriptor.v
     assert_eq!(
-        format!("{}", htlc_descriptor.address(Network::Bitcoin)),
+        format!("{}", htlc_descriptor.address(Network::Peercoin)),
         "bc1qmpfcw7he9z5d9ftfe8qw699azmm2sr8fen903fs4plv007yx0t3qxfmqv5"
     );
 }

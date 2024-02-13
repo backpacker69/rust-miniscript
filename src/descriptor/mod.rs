@@ -16,9 +16,9 @@ use core::fmt;
 use core::ops::Range;
 use core::str::{self, FromStr};
 
-use bitcoin::address::WitnessVersion;
-use bitcoin::hashes::{hash160, ripemd160, sha256};
-use bitcoin::{secp256k1, Address, Network, Script, ScriptBuf, TxIn, Witness};
+use peercoin::address::WitnessVersion;
+use peercoin::hashes::{hash160, ripemd160, sha256};
+use peercoin::{secp256k1, Address, Network, Script, ScriptBuf, TxIn, Witness};
 use sync::Arc;
 
 use self::checksum::verify_checksum;
@@ -591,14 +591,14 @@ impl Descriptor<DescriptorPublicKey> {
         self.at_derivation_index(index)
     }
 
-    /// Convert all the public keys in the descriptor to [`bitcoin::PublicKey`] by deriving them or
-    /// otherwise converting them. All [`bitcoin::secp256k1::XOnlyPublicKey`]s are converted to by adding a
+    /// Convert all the public keys in the descriptor to [`peercoin::PublicKey`] by deriving them or
+    /// otherwise converting them. All [`peercoin::secp256k1::XOnlyPublicKey`]s are converted to by adding a
     /// default(0x02) y-coordinate.
     ///
     /// This is a shorthand for:
     ///
     /// ```
-    /// # use miniscript::{Descriptor, DescriptorPublicKey, bitcoin::secp256k1::Secp256k1};
+    /// # use miniscript::{Descriptor, DescriptorPublicKey, peercoin::secp256k1::Secp256k1};
     /// # use core::str::FromStr;
     /// # let descriptor = Descriptor::<DescriptorPublicKey>::from_str("tr(xpub6BgBgsespWvERF3LHQu6CnqdvfEvtMcQjYrcRzx53QJjSxarj2afYWcLteoGVky7D3UKDP9QyrLprQ3VCECoY49yfdDEHGCtMMj92pReUsQ/0/*)")
     ///     .expect("Valid ranged descriptor");
@@ -621,7 +621,7 @@ impl Descriptor<DescriptorPublicKey> {
         &self,
         secp: &secp256k1::Secp256k1<C>,
         index: u32,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, ConversionError> {
+    ) -> Result<Descriptor<peercoin::PublicKey>, ConversionError> {
         self.at_derivation_index(index)?.derived_descriptor(secp)
     }
 
@@ -757,7 +757,7 @@ impl Descriptor<DescriptorPublicKey> {
         secp: &secp256k1::Secp256k1<C>,
         script_pubkey: &Script,
         range: Range<u32>,
-    ) -> Result<Option<(u32, Descriptor<bitcoin::PublicKey>)>, ConversionError> {
+    ) -> Result<Option<(u32, Descriptor<peercoin::PublicKey>)>, ConversionError> {
         let range = if self.has_wildcard() { range } else { 0..1 };
 
         for i in range {
@@ -837,15 +837,15 @@ impl Descriptor<DescriptorPublicKey> {
 }
 
 impl Descriptor<DefiniteDescriptorKey> {
-    /// Convert all the public keys in the descriptor to [`bitcoin::PublicKey`] by deriving them or
-    /// otherwise converting them. All [`bitcoin::secp256k1::XOnlyPublicKey`]s are converted to by adding a
+    /// Convert all the public keys in the descriptor to [`peercoin::PublicKey`] by deriving them or
+    /// otherwise converting them. All [`peercoin::secp256k1::XOnlyPublicKey`]s are converted to by adding a
     /// default(0x02) y-coordinate.
     ///
     /// # Examples
     ///
     /// ```
     /// use miniscript::descriptor::{Descriptor, DescriptorPublicKey};
-    /// use miniscript::bitcoin::secp256k1;
+    /// use miniscript::peercoin::secp256k1;
     /// use std::str::FromStr;
     ///
     /// // test from bip 86
@@ -862,21 +862,21 @@ impl Descriptor<DefiniteDescriptorKey> {
     pub fn derived_descriptor<C: secp256k1::Verification>(
         &self,
         secp: &secp256k1::Secp256k1<C>,
-    ) -> Result<Descriptor<bitcoin::PublicKey>, ConversionError> {
+    ) -> Result<Descriptor<peercoin::PublicKey>, ConversionError> {
         struct Derivator<'a, C: secp256k1::Verification>(&'a secp256k1::Secp256k1<C>);
 
         impl<'a, C: secp256k1::Verification>
-            Translator<DefiniteDescriptorKey, bitcoin::PublicKey, ConversionError>
+            Translator<DefiniteDescriptorKey, peercoin::PublicKey, ConversionError>
             for Derivator<'a, C>
         {
             fn pk(
                 &mut self,
                 pk: &DefiniteDescriptorKey,
-            ) -> Result<bitcoin::PublicKey, ConversionError> {
+            ) -> Result<peercoin::PublicKey, ConversionError> {
                 pk.derive_public_key(self.0)
             }
 
-            translate_hash_clone!(DefiniteDescriptorKey, bitcoin::PublicKey, ConversionError);
+            translate_hash_clone!(DefiniteDescriptorKey, peercoin::PublicKey, ConversionError);
         }
 
         let derived = self.translate_pk(&mut Derivator(secp));
@@ -954,14 +954,14 @@ mod tests {
     use core::convert::TryFrom;
     use core::str::FromStr;
 
-    use bitcoin::blockdata::opcodes::all::{OP_CLTV, OP_CSV};
-    use bitcoin::blockdata::script::Instruction;
-    use bitcoin::blockdata::{opcodes, script};
-    use bitcoin::hashes::hex::FromHex;
-    use bitcoin::hashes::{hash160, sha256, Hash};
-    use bitcoin::script::PushBytes;
-    use bitcoin::sighash::EcdsaSighashType;
-    use bitcoin::{self, bip32, secp256k1, PublicKey, Sequence};
+    use peercoin::blockdata::opcodes::all::{OP_CLTV, OP_CSV};
+    use peercoin::blockdata::script::Instruction;
+    use peercoin::blockdata::{opcodes, script};
+    use peercoin::hashes::hex::FromHex;
+    use peercoin::hashes::{hash160, sha256, Hash};
+    use peercoin::script::PushBytes;
+    use peercoin::sighash::EcdsaSighashType;
+    use peercoin::{self, bip32, secp256k1, PublicKey, Sequence};
 
     use super::checksum::desc_checksum;
     use super::tr::Tr;
@@ -1050,7 +1050,7 @@ mod tests {
             )
         );
         assert_eq!(
-            bare.address(Network::Bitcoin).unwrap_err().to_string(),
+            bare.address(Network::Peercoin).unwrap_err().to_string(),
             "Bare descriptors don't have address"
         );
 
@@ -1085,8 +1085,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            pkh.address(Network::Bitcoin,).unwrap().to_string(),
-            "1D7nRvrRgzCg9kYBwhPH3j3Gs6SmsRg3Wq"
+            pkh.address(Network::Peercoin,).unwrap().to_string(),
+            "PLhxauFGjugs8bCxHmhoid1YUqcf2uhNyC"
         );
 
         let wpkh = StdDescriptor::from_str(
@@ -1107,8 +1107,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            wpkh.address(Network::Bitcoin,).unwrap().to_string(),
-            "bc1qsn57m9drscflq5nl76z6ny52hck5w4x5wqd9yt"
+            wpkh.address(Network::Peercoin,).unwrap().to_string(),
+            "pc1qsn57m9drscflq5nl76z6ny52hck5w4x5sj7mym"
         );
 
         let shwpkh = StdDescriptor::from_str(
@@ -1130,8 +1130,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            shwpkh.address(Network::Bitcoin,).unwrap().to_string(),
-            "3PjMEzoveVbvajcnDDuxcJhsuqPHgydQXq"
+            shwpkh.address(Network::Peercoin,).unwrap().to_string(),
+            "pTauXACCAhW4BHEUxDDevMBzQLEwHb2b7m"
         );
 
         let sh = StdDescriptor::from_str(
@@ -1153,8 +1153,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            sh.address(Network::Bitcoin,).unwrap().to_string(),
-            "3HDbdvM9CQ6ASnQFUkWw6Z4t3qNwMesJE9"
+            sh.address(Network::Peercoin,).unwrap().to_string(),
+            "pM59v5jQibzJ3L1xDjpdQbYzYLEatpvcn1"
         );
 
         let wsh = StdDescriptor::from_str(
@@ -1180,8 +1180,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            wsh.address(Network::Bitcoin,).unwrap().to_string(),
-            "bc1qlymeahyfsv2jm3upw3urqp6m65ufde9seedl7umh0lth6yjt5zzsk33tv6"
+            wsh.address(Network::Peercoin,).unwrap().to_string(),
+            "pc1qlymeahyfsv2jm3upw3urqp6m65ufde9seedl7umh0lth6yjt5zzsyvyegy"
         );
 
         let shwsh = StdDescriptor::from_str(
@@ -1203,8 +1203,8 @@ mod tests {
                 .into_script()
         );
         assert_eq!(
-            shwsh.address(Network::Bitcoin,).unwrap().to_string(),
-            "38cTksiyPT2b1uGRVbVqHdDhW9vKs84N6Z"
+            shwsh.address(Network::Peercoin,).unwrap().to_string(),
+            "pCU2337EuevicSt8EaoXbfhozemyVmsQew"
         );
     }
 
@@ -1213,7 +1213,7 @@ mod tests {
         let secp = secp256k1::Secp256k1::new();
         let sk =
             secp256k1::SecretKey::from_slice(&b"sally was a secret key, she said"[..]).unwrap();
-        let pk = bitcoin::PublicKey::new(secp256k1::PublicKey::from_secret_key(&secp, &sk));
+        let pk = peercoin::PublicKey::new(secp256k1::PublicKey::from_secret_key(&secp, &sk));
         let msg = secp256k1::Message::from_slice(&b"michael was a message, amusingly"[..])
             .expect("32 bytes");
         let sig = secp.sign_ecdsa(&msg, &sk);
@@ -1222,18 +1222,18 @@ mod tests {
 
         struct SimpleSat {
             sig: secp256k1::ecdsa::Signature,
-            pk: bitcoin::PublicKey,
+            pk: peercoin::PublicKey,
         }
 
-        impl Satisfier<bitcoin::PublicKey> for SimpleSat {
+        impl Satisfier<peercoin::PublicKey> for SimpleSat {
             fn lookup_ecdsa_sig(
                 &self,
-                pk: &bitcoin::PublicKey,
-            ) -> Option<bitcoin::ecdsa::Signature> {
+                pk: &peercoin::PublicKey,
+            ) -> Option<peercoin::ecdsa::Signature> {
                 if *pk == self.pk {
-                    Some(bitcoin::ecdsa::Signature {
+                    Some(peercoin::ecdsa::Signature {
                         sig: self.sig,
-                        hash_ty: bitcoin::sighash::EcdsaSighashType::All,
+                        hash_ty: peercoin::sighash::EcdsaSighashType::All,
                     })
                 } else {
                     None
@@ -1244,9 +1244,9 @@ mod tests {
         let satisfier = SimpleSat { sig, pk };
         let ms = ms_str!("c:pk_k({})", pk);
 
-        let mut txin = bitcoin::TxIn {
-            previous_output: bitcoin::OutPoint::default(),
-            script_sig: bitcoin::ScriptBuf::new(),
+        let mut txin = peercoin::TxIn {
+            previous_output: peercoin::OutPoint::default(),
+            script_sig: peercoin::ScriptBuf::new(),
             sequence: Sequence::from_height(100),
             witness: Witness::default(),
         };
@@ -1255,8 +1255,8 @@ mod tests {
         bare.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
                 script_sig: script::Builder::new()
                     .push_slice(<&PushBytes>::try_from(sigser.as_slice()).unwrap())
                     .into_script(),
@@ -1264,14 +1264,14 @@ mod tests {
                 witness: Witness::default(),
             }
         );
-        assert_eq!(bare.unsigned_script_sig(), bitcoin::ScriptBuf::new());
+        assert_eq!(bare.unsigned_script_sig(), peercoin::ScriptBuf::new());
 
         let pkh = Descriptor::new_pkh(pk).unwrap();
         pkh.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
                 script_sig: script::Builder::new()
                     .push_slice(<&PushBytes>::try_from(sigser.as_slice()).unwrap())
                     .push_key(&pk)
@@ -1280,20 +1280,20 @@ mod tests {
                 witness: Witness::default(),
             }
         );
-        assert_eq!(pkh.unsigned_script_sig(), bitcoin::ScriptBuf::new());
+        assert_eq!(pkh.unsigned_script_sig(), peercoin::ScriptBuf::new());
 
         let wpkh = Descriptor::new_wpkh(pk).unwrap();
         wpkh.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
-                script_sig: bitcoin::ScriptBuf::new(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
+                script_sig: peercoin::ScriptBuf::new(),
                 sequence: Sequence::from_height(100),
                 witness: Witness::from_slice(&vec![sigser.clone(), pk.to_bytes(),]),
             }
         );
-        assert_eq!(wpkh.unsigned_script_sig(), bitcoin::ScriptBuf::new());
+        assert_eq!(wpkh.unsigned_script_sig(), peercoin::ScriptBuf::new());
 
         let shwpkh = Descriptor::new_sh_wpkh(pk).unwrap();
         shwpkh.satisfy(&mut txin, &satisfier).expect("satisfaction");
@@ -1307,8 +1307,8 @@ mod tests {
             .into_script();
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
                 script_sig: script::Builder::new()
                     .push_slice(<&PushBytes>::try_from(redeem_script.as_bytes()).unwrap())
                     .into_script(),
@@ -1328,8 +1328,8 @@ mod tests {
         sh.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
                 script_sig: script::Builder::new()
                     .push_slice(<&PushBytes>::try_from(sigser.as_slice()).unwrap())
                     .push_slice(<&PushBytes>::try_from(ms.encode().as_bytes()).unwrap())
@@ -1338,7 +1338,7 @@ mod tests {
                 witness: Witness::default(),
             }
         );
-        assert_eq!(sh.unsigned_script_sig(), bitcoin::ScriptBuf::new());
+        assert_eq!(sh.unsigned_script_sig(), peercoin::ScriptBuf::new());
 
         let ms = ms_str!("c:pk_k({})", pk);
 
@@ -1346,21 +1346,21 @@ mod tests {
         wsh.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
-                script_sig: bitcoin::ScriptBuf::new(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
+                script_sig: peercoin::ScriptBuf::new(),
                 sequence: Sequence::from_height(100),
                 witness: Witness::from_slice(&vec![sigser.clone(), ms.encode().into_bytes(),]),
             }
         );
-        assert_eq!(wsh.unsigned_script_sig(), bitcoin::ScriptBuf::new());
+        assert_eq!(wsh.unsigned_script_sig(), peercoin::ScriptBuf::new());
 
         let shwsh = Descriptor::new_sh_wsh(ms.clone()).unwrap();
         shwsh.satisfy(&mut txin, &satisfier).expect("satisfaction");
         assert_eq!(
             txin,
-            bitcoin::TxIn {
-                previous_output: bitcoin::OutPoint::default(),
+            peercoin::TxIn {
+                previous_output: peercoin::OutPoint::default(),
                 script_sig: script::Builder::new()
                     .push_slice(
                         <&PushBytes>::try_from(ms.encode().to_v0_p2wsh().as_bytes()).unwrap()
@@ -1380,7 +1380,7 @@ mod tests {
 
     #[test]
     fn after_is_cltv() {
-        let descriptor = Descriptor::<bitcoin::PublicKey>::from_str("wsh(after(1000))").unwrap();
+        let descriptor = Descriptor::<peercoin::PublicKey>::from_str("wsh(after(1000))").unwrap();
         let script = descriptor.explicit_script().unwrap();
 
         let actual_instructions: Vec<_> = script.instructions().collect();
@@ -1391,7 +1391,7 @@ mod tests {
 
     #[test]
     fn older_is_csv() {
-        let descriptor = Descriptor::<bitcoin::PublicKey>::from_str("wsh(older(1000))").unwrap();
+        let descriptor = Descriptor::<peercoin::PublicKey>::from_str("wsh(older(1000))").unwrap();
         let script = descriptor.explicit_script().unwrap();
 
         let actual_instructions: Vec<_> = script.instructions().collect();
@@ -1446,7 +1446,7 @@ mod tests {
 
     #[test]
     fn tr_script_pubkey() {
-        let key = Descriptor::<bitcoin::PublicKey>::from_str(
+        let key = Descriptor::<peercoin::PublicKey>::from_str(
             "tr(02e20e746af365e86647826397ba1c0e0d5cb685752976fe2f326ab76bdc4d6ee9)",
         )
         .unwrap();
@@ -1458,7 +1458,7 @@ mod tests {
 
     #[test]
     fn roundtrip_tests() {
-        let descriptor = Descriptor::<bitcoin::PublicKey>::from_str("multi");
+        let descriptor = Descriptor::<peercoin::PublicKey>::from_str("multi");
         assert_eq!(
             descriptor.unwrap_err().to_string(),
             "unexpected «no arguments given»"
@@ -1467,7 +1467,7 @@ mod tests {
 
     #[test]
     fn empty_thresh() {
-        let descriptor = Descriptor::<bitcoin::PublicKey>::from_str("thresh");
+        let descriptor = Descriptor::<peercoin::PublicKey>::from_str("thresh");
         assert_eq!(
             descriptor.unwrap_err().to_string(),
             "unexpected «no arguments given»"
@@ -1477,28 +1477,28 @@ mod tests {
     #[test]
     fn witness_stack_for_andv_is_arranged_in_correct_order() {
         // arrange
-        let a = bitcoin::PublicKey::from_str(
+        let a = peercoin::PublicKey::from_str(
             "02937402303919b3a2ee5edd5009f4236f069bf75667b8e6ecf8e5464e20116a0e",
         )
         .unwrap();
         let sig_a = secp256k1::ecdsa::Signature::from_str("3045022100a7acc3719e9559a59d60d7b2837f9842df30e7edcd754e63227e6168cec72c5d022066c2feba4671c3d99ea75d9976b4da6c86968dbf3bab47b1061e7a1966b1778c").unwrap();
 
-        let b = bitcoin::PublicKey::from_str(
+        let b = peercoin::PublicKey::from_str(
             "02eb64639a17f7334bb5a1a3aad857d6fec65faef439db3de72f85c88bc2906ad3",
         )
         .unwrap();
         let sig_b = secp256k1::ecdsa::Signature::from_str("3044022075b7b65a7e6cd386132c5883c9db15f9a849a0f32bc680e9986398879a57c276022056d94d12255a4424f51c700ac75122cb354895c9f2f88f0cbb47ba05c9c589ba").unwrap();
 
-        let descriptor = Descriptor::<bitcoin::PublicKey>::from_str(&format!(
+        let descriptor = Descriptor::<peercoin::PublicKey>::from_str(&format!(
             "wsh(and_v(v:pk({A}),pk({B})))",
             A = a,
             B = b
         ))
         .unwrap();
 
-        let mut txin = bitcoin::TxIn {
-            previous_output: bitcoin::OutPoint::default(),
-            script_sig: bitcoin::ScriptBuf::new(),
+        let mut txin = peercoin::TxIn {
+            previous_output: peercoin::OutPoint::default(),
+            script_sig: peercoin::ScriptBuf::new(),
             sequence: Sequence::ZERO,
             witness: Witness::default(),
         };
@@ -1507,14 +1507,14 @@ mod tests {
 
             satisfier.insert(
                 a,
-                bitcoin::ecdsa::Signature {
+                peercoin::ecdsa::Signature {
                     sig: sig_a,
                     hash_ty: EcdsaSighashType::All,
                 },
             );
             satisfier.insert(
                 b,
-                bitcoin::ecdsa::Signature {
+                peercoin::ecdsa::Signature {
                     sig: sig_b,
                     hash_ty: EcdsaSighashType::All,
                 },
@@ -1645,7 +1645,7 @@ mod tests {
         let key = "03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8";
         let expected = DescriptorPublicKey::Single(SinglePub {
             key: SinglePubKey::FullKey(
-                bitcoin::PublicKey::from_str(
+                peercoin::PublicKey::from_str(
                     "03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8",
                 )
                 .unwrap(),
@@ -1658,7 +1658,7 @@ mod tests {
         // Raw (uncompressed) pubkey
         let key = "04f5eeb2b10c944c6b9fbcfff94c35bdeecd93df977882babc7f3a2cf7f5c81d3b09a68db7f0e04f21de5d4230e75e6dbe7ad16eefe0d4325a62067dc6f369446a";
         let expected = DescriptorPublicKey::Single(SinglePub {
-            key: SinglePubKey::FullKey(bitcoin::PublicKey::from_str(
+            key: SinglePubKey::FullKey(peercoin::PublicKey::from_str(
                 "04f5eeb2b10c944c6b9fbcfff94c35bdeecd93df977882babc7f3a2cf7f5c81d3b09a68db7f0e04f21de5d4230e75e6dbe7ad16eefe0d4325a62067dc6f369446a",
             )
             .unwrap()),
@@ -1672,7 +1672,7 @@ mod tests {
             "[78412e3a/0'/42/0']0231c7d3fc85c148717848033ce276ae2b464a4e2c367ed33886cc428b8af48ff8";
         let expected = DescriptorPublicKey::Single(SinglePub {
             key: SinglePubKey::FullKey(
-                bitcoin::PublicKey::from_str(
+                peercoin::PublicKey::from_str(
                     "0231c7d3fc85c148717848033ce276ae2b464a4e2c367ed33886cc428b8af48ff8",
                 )
                 .unwrap(),
@@ -1711,16 +1711,16 @@ mod tests {
                 .unwrap()
                 .derived_descriptor(&secp_ctx)
                 .unwrap()
-                .address(bitcoin::Network::Bitcoin)
+                .address(peercoin::Network::Peercoin)
                 .unwrap();
             let addr_two = desc_two
                 .at_derivation_index(index)
                 .unwrap()
                 .derived_descriptor(&secp_ctx)
                 .unwrap()
-                .address(bitcoin::Network::Bitcoin)
+                .address(peercoin::Network::Peercoin)
                 .unwrap();
-            let addr_expected = bitcoin::Address::from_str(raw_addr_expected)
+            let addr_expected = peercoin::Address::from_str(raw_addr_expected)
                 .unwrap()
                 .assume_checked();
             assert_eq!(addr_one, addr_expected);
@@ -1731,21 +1731,21 @@ mod tests {
         _test_sortedmulti(
             "sh(sortedmulti(1,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352))#uetvewm2",
             "sh(sortedmulti(1,0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))#7l8smyg9",
-            "3JZJNxvDKe6Y55ZaF5223XHwfF2eoMNnoV",
+            "pNQrf8JUqqzffdBGz4KiMZn49jtJRYgokm",
         );
 
         // P2WSH and single-xpub descriptor
         _test_sortedmulti(
             "wsh(sortedmulti(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH))#7etm7zk7",
             "wsh(sortedmulti(1,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB))#ppmeel9k",
-            "bc1qpq2cfgz5lktxzr5zqv7nrzz46hsvq3492ump9pz8rzcl8wqtwqcspx5y6a",
+            "pc1qpq2cfgz5lktxzr5zqv7nrzz46hsvq3492ump9pz8rzcl8wqtwqcsnmpk7r",
         );
 
         // P2WSH-P2SH and ranged descriptor
         _test_sortedmulti(
             "sh(wsh(sortedmulti(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*)))#u60cee0u",
             "sh(wsh(sortedmulti(1,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*)))#75dkf44w",
-            "325zcVBN5o2eqqqtGwPjmtDd8dJRyYP82s",
+            "p5wYteZdbzvnSPTb1vhS5vhjd8A5baBYAB",
         );
     }
 
@@ -1990,15 +1990,15 @@ pk(03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8))";
 
     #[test]
     fn test_context_pks() {
-        let comp_key = bitcoin::PublicKey::from_str(
+        let comp_key = peercoin::PublicKey::from_str(
             "02015e4cb53458bf813db8c79968e76e10d13ed6426a23fa71c2f41ba021c2a7ab",
         )
         .unwrap();
-        let x_only_key = bitcoin::key::XOnlyPublicKey::from_str(
+        let x_only_key = peercoin::key::XOnlyPublicKey::from_str(
             "015e4cb53458bf813db8c79968e76e10d13ed6426a23fa71c2f41ba021c2a7ab",
         )
         .unwrap();
-        let uncomp_key = bitcoin::PublicKey::from_str("04015e4cb53458bf813db8c79968e76e10d13ed6426a23fa71c2f41ba021c2a7ab0d46021e9e69ef061eb25eab41ae206187b2b05e829559df59d78319bd9267b4").unwrap();
+        let uncomp_key = peercoin::PublicKey::from_str("04015e4cb53458bf813db8c79968e76e10d13ed6426a23fa71c2f41ba021c2a7ab0d46021e9e69ef061eb25eab41ae206187b2b05e829559df59d78319bd9267b4").unwrap();
 
         type Desc = Descriptor<DescriptorPublicKey>;
 

@@ -8,7 +8,7 @@
 
 use core::fmt;
 
-use bitcoin::blockdata::{opcodes, script};
+use peercoin::blockdata::{opcodes, script};
 
 use super::Error;
 use crate::prelude::*;

@@ -9,12 +9,12 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
-use bitcoin::hashes::{sha256d, Hash};
-use bitcoin::psbt::Psbt;
-use bitcoin::secp256k1::{self, Secp256k1};
-use bitcoin::{psbt, Amount, OutPoint, Sequence, Transaction, TxIn, TxOut, Txid};
-use bitcoind::bitcoincore_rpc::{json, Client, RpcApi};
-use miniscript::bitcoin::absolute;
+use peercoin::hashes::{sha256d, Hash};
+use peercoin::psbt::Psbt;
+use peercoin::secp256k1::{self, Secp256k1};
+use peercoin::{psbt, Amount, OutPoint, Sequence, Transaction, TxIn, TxOut, Txid};
+use peercoind::bitcoincore_rpc::{json, Client, RpcApi};
+use miniscript::peercoin::absolute;
 use miniscript::psbt::PsbtExt;
 use miniscript::{bitcoin, Descriptor};
 
@@ -25,7 +25,7 @@ use setup::test_util::{self, PubData, TestData};
 pub(crate) fn parse_miniscripts(
     secp: &Secp256k1<secp256k1::All>,
     pubdata: &PubData,
-) -> Vec<Descriptor<bitcoin::PublicKey>> {
+) -> Vec<Descriptor<peercoin::PublicKey>> {
     // File must exist in current path before this produces output
     let mut desc_vec = vec![];
     // Consumes the iterator, returns an (Optional) String
@@ -88,7 +88,7 @@ pub fn test_from_cpp_ms(cl: &Client, testdata: &TestData) {
     for wsh in desc_vec.iter() {
         let txid = cl
             .send_to_address(
-                &wsh.address(bitcoin::Network::Regtest).unwrap(),
+                &wsh.address(peercoin::Network::Regtest).unwrap(),
                 btc(1),
                 None,
                 None,
@@ -175,8 +175,8 @@ pub fn test_from_cpp_ms(cl: &Client, testdata: &TestData) {
             .collect();
         // Get the required sighash message
         let amt = btc(1).to_sat();
-        let mut sighash_cache = bitcoin::sighash::SighashCache::new(&psbts[i].unsigned_tx);
-        let sighash_ty = bitcoin::sighash::EcdsaSighashType::All;
+        let mut sighash_cache = peercoin::sighash::SighashCache::new(&psbts[i].unsigned_tx);
+        let sighash_ty = peercoin::sighash::EcdsaSighashType::All;
         let sighash = sighash_cache
             .segwit_signature_hash(0, &ms.encode(), amt, sighash_ty)
             .unwrap();
@@ -191,7 +191,7 @@ pub fn test_from_cpp_ms(cl: &Client, testdata: &TestData) {
             let pk = pks[sks.iter().position(|&x| x == sk).unwrap()];
             psbts[i].inputs[0].partial_sigs.insert(
                 pk,
-                bitcoin::ecdsa::Signature {
+                peercoin::ecdsa::Signature {
                     sig,
                     hash_ty: sighash_ty,
                 },

@@ -6,24 +6,24 @@ license = "CC0-1.0"
 homepage = "https://github.com/rust-bitcoin/rust-miniscript/"
 repository = "https://github.com/rust-bitcoin/rust-miniscript/"
 description = "Miniscript: a subset of Bitcoin Script designed for analysis"
-keywords = [ "crypto", "bitcoin", "miniscript", "script" ]
+keywords = [ "crypto", "peercoin", "miniscript", "script" ]
 readme = "README.md"
 edition = "2018"
 
 [features]
 default = ["std"]
-std = ["bitcoin/std", "bitcoin/secp-recovery"]
-no-std = ["hashbrown", "bitcoin/no-std"]
+std = ["peercoin/std", "peercoin/secp-recovery"]
+no-std = ["hashbrown", "peercoin/no-std"]
 compiler = []
 trace = []
 
 unstable = []
-serde = ["actual-serde", "bitcoin/serde"]
-rand = ["bitcoin/rand"]
-base64 = ["bitcoin/base64"]
+serde = ["actual-serde", "peercoin/serde"]
+rand = ["peercoin/rand"]
+base64 = ["peercoin/base64"]
 
 [dependencies]
-bitcoin = { version = "0.30.0", default-features = false }
+peercoin = { git = "https://github.com/backpacker69/rust-peercoin", branch = "0.30.x", default-features = false }
 hashbrown = { version = "0.11", optional = true }
 internals = { package = "bitcoin-private", version = "0.1.0", default_features = false }
 
@@ -32,7 +32,7 @@ actual-serde = { package = "serde", version = "1.0.103", optional = true }
 
 [dev-dependencies]
 serde_test = "1.0.147"
-bitcoin = { version = "0.30.0", features = ["base64"] }
+peercoin = { git = "https://github.com/backpacker69/rust-peercoin", branch = "0.30.x", features = ["base64"] }
 secp256k1 = {version = "0.27.0", features = ["rand-std"]}
 actual-base64 = { package = "base64", version = "0.13.0" }
 
@@ -71,3 +71,4 @@ required-features = ["std", "base64"]
 [workspace]
 members = ["bitcoind-tests", "fuzz"]
 exclude = ["embedded"]
+
